@@ -1,0 +1,133 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #dcc8aa;
+}
+
+.root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-container {
+  flex: 0 0 auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 5px;
+}
+
+.cell {
+  background: white;
+  border: 2px solid #ccc;
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin: 2px;
+}
+
+.circle.red {
+  background: #d9534f;
+}
+.circle.green {
+  background: #5cb85c;
+}
+.circle.blue {
+  background: #0275d8;
+}
+
+.robot {
+  width: 40px;
+  height: 40px;
+  background-image: url('../robot.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 6px;
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.holding-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.holding {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  border-radius: 6px;
+}
+.holding.empty {
+  background: #fff;
+  border: 2px dashed #ccc;
+}
+
+.message {
+  padding: 12px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: none;
+}
+.message.show {
+  display: block;
+  background: #fdecea;
+  color: #8a1f11;
+  border: 1px solid #f5c6cb;
+}
+
+.movement-controls button,
+.interaction-controls button,
+.export-controls button {
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.movement-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.middle-row {
+  display: flex;
+  gap: 20px;
+}
