@@ -198,59 +198,200 @@ func TestService_Pick(t *testing.T) {
 }
 
 func TestService_Drop(t *testing.T) {
+	redCircle := Red
+
 	tests := []struct {
 		name         string
 		setupFunc    func(*DataStore)
+		assertState	func(*testing.T, State)
 		expectError  bool
 		errorMessage string
+
 	}{
 		{
 			name: "drop on empty stack",
 			setupFunc: func(ds *DataStore) {
 				ds.State.Robot.PositionX = 1
 				ds.State.Robot.PositionY = 1
-				circle := Red
-				ds.State.Robot.Holding = &circle
+				ds.State.Robot.Holding = &redCircle
 				ds.State.Grid[1][1] = []Circle{}
 			},
-			expectError: false,
-		},
-		{
-			name: "drop red on green stack",
-			setupFunc: func(ds *DataStore) {
-				// Pick red from 0,0 and move to 0,1 (green stack)
-				svc.Pick()
-				svc.Move(Down)
+			assertState: func(t *testing.T, state State) {
+				if len(state.Grid[1][1]) != 1 || state.Grid[1][1][0] != Red {
+					t.Fatalf("expected red circle on stack, got %v", state.Grid[1][1])
+				}
+
+				if state.Robot.Holding != nil {
+					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
+				}
 			},
 			expectError: false,
 		},
 		{
-			name: "drop red on red stack - should fail",
+			name: "drop when not holding",
 			setupFunc: func(ds *DataStore) {
-				// Pick red from 0,0 and move to 1,1 (red stack)
-				svc.Pick()
-				svc.Move(Right)
-				svc.Move(Down)
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = nil
 			},
+			assertState: func(t *testing.T, state State) {},
 			expectError: true,
+			errorMessage: "not holding any circle to drop",
 		},
 		{
-			name: "drop without holding anything",
+			name: "drop blue on red circle",
 			setupFunc: func(ds *DataStore) {
-				// Don't pick anything
+				blueCircle := Blue
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &blueCircle
+				ds.State.Grid[1][1] = []Circle{Red}
 			},
+			assertState: func(t *testing.T, state State) {},
 			expectError: true,
+			errorMessage: "cannot drop circle here due to stacking rules",
+		},
+		{
+			name: "drop green on red circle",
+			setupFunc: func(ds *DataStore) {
+				greenCircle := Green
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &greenCircle
+				ds.State.Grid[1][1] = []Circle{Red}
+			},
+			assertState: func(t *testing.T, state State) {},
+			expectError: true,
+			errorMessage: "cannot drop circle here due to stacking rules",
+		},
+		{
+			name: "drop red on red circle",
+			setupFunc: func(ds *DataStore) {
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &redCircle
+				ds.State.Grid[1][1] = []Circle{Red}
+			},
+			assertState: func(t *testing.T, state State) {},
+			expectError: true,
+			errorMessage: "cannot drop circle here due to stacking rules",
+		},
+		{
+			name: "drop green on blue circle",
+			setupFunc: func(ds *DataStore) {
+				greenCircle := Green
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &greenCircle
+				ds.State.Grid[1][1] = []Circle{Blue}
+			},
+			assertState: func(t *testing.T, state State) {},
+			expectError: true,
+			errorMessage: "cannot drop circle here due to stacking rules",
+		},
+		{
+			name: "drop red on blue circle",
+			setupFunc: func(ds *DataStore) {
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &redCircle
+				ds.State.Grid[1][1] = []Circle{Blue}
+			},
+			assertState: func(t *testing.T, state State) {
+				if len(state.Grid[1][1]) != 2 || state.Grid[1][1][1] != Red {
+					t.Fatalf("expected red circle on top of blue, got %v", state.Grid[1][1])
+				}
+				
+				if state.Robot.Holding != nil {
+					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "drop blue on blue circle",
+			setupFunc: func(ds *DataStore) {
+				blueCircle := Blue
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &blueCircle
+				ds.State.Grid[1][1] = []Circle{Blue}
+			},
+			assertState: func(t *testing.T, state State) {},
+			expectError: true,
+			errorMessage: "cannot drop circle here due to stacking rules",
+		},
+		{
+			name: "drop blue on green circle",
+			setupFunc: func(ds *DataStore) {
+				blueCircle := Blue
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &blueCircle
+				ds.State.Grid[1][1] = []Circle{Green}
+			},
+			assertState: func(t *testing.T, state State) {
+				if len(state.Grid[1][1]) != 2 || state.Grid[1][1][1] != Blue {
+					t.Fatalf("expected blue circle on top, got %v", state.Grid[1][1])
+				}
+
+				if state.Robot.Holding != nil {
+					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
+				}	
+			},
+			expectError: false,
+		},
+		{
+			name: "drop green on green circle",
+			setupFunc: func(ds *DataStore) {
+				greenCircle := Green
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &greenCircle
+				ds.State.Grid[1][1] = []Circle{Green}
+			},
+			assertState: func(t *testing.T, state State) {
+				if len(state.Grid[1][1]) != 2 || state.Grid[1][1][1] != Green {
+					t.Fatalf("expected green circle on top, got %v", state.Grid[1][1])
+				}
+				
+				if state.Robot.Holding != nil {
+					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
+				}
+			},
+			expectError: false,
+		},
+		{
+			name: "drop red on green circle",
+			setupFunc: func(ds *DataStore) {
+				ds.State.Robot.PositionX = 1
+				ds.State.Robot.PositionY = 1
+				ds.State.Robot.Holding = &redCircle
+				ds.State.Grid[1][1] = []Circle{Green}
+			},
+			assertState: func(t *testing.T, state State) {
+				if len(state.Grid[1][1]) != 2 || state.Grid[1][1][1] != Red {
+					t.Fatalf("expected red circle on top, got %v", state.Grid[1][1])
+				}
+
+				if state.Robot.Holding != nil {
+					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
+				}
+			},
+			expectError: false,	
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ds := NewDataStore()
-			svc := NewService(ds)
-
 			tt.setupFunc(ds)
 
+			svc := NewService(ds)
+
 			state, err := svc.Drop()
+
+			tt.assertState(t, state)
 
 			if tt.expectError {
 				if err == nil {
@@ -262,10 +403,6 @@ func TestService_Drop(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-
-			if state.Robot.Holding != nil {
-				t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
-			}
 		})
 	}
 }
@@ -273,14 +410,10 @@ func TestService_Drop(t *testing.T) {
 func TestService_GetState(t *testing.T) {
 	tests := []struct {
 		name         string
-		setupFunc    func(*Service)
 		validateFunc func(*testing.T, State)
 	}{
 		{
-			name: "initial state",
-			setupFunc: func(svc *Service) {
-				// No setup needed
-			},
+			name: "get state successfully",
 			validateFunc: func(t *testing.T, state State) {
 				if state.Robot.PositionX != 0 || state.Robot.PositionY != 0 {
 					t.Fatalf("expected robot at (0,0), got (%d,%d)",
