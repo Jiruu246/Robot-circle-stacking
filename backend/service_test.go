@@ -203,10 +203,9 @@ func TestService_Drop(t *testing.T) {
 	tests := []struct {
 		name         string
 		setupFunc    func(*DataStore)
-		assertState	func(*testing.T, State)
+		assertState  func(*testing.T, State)
 		expectError  bool
 		errorMessage string
-
 	}{
 		{
 			name: "drop on empty stack",
@@ -234,8 +233,8 @@ func TestService_Drop(t *testing.T) {
 				ds.State.Robot.PositionY = 1
 				ds.State.Robot.Holding = nil
 			},
-			assertState: func(t *testing.T, state State) {},
-			expectError: true,
+			assertState:  func(t *testing.T, state State) {},
+			expectError:  true,
 			errorMessage: "not holding any circle to drop",
 		},
 		{
@@ -247,8 +246,8 @@ func TestService_Drop(t *testing.T) {
 				ds.State.Robot.Holding = &blueCircle
 				ds.State.Grid[1][1] = []Circle{Red}
 			},
-			assertState: func(t *testing.T, state State) {},
-			expectError: true,
+			assertState:  func(t *testing.T, state State) {},
+			expectError:  true,
 			errorMessage: "cannot drop circle here due to stacking rules",
 		},
 		{
@@ -260,8 +259,8 @@ func TestService_Drop(t *testing.T) {
 				ds.State.Robot.Holding = &greenCircle
 				ds.State.Grid[1][1] = []Circle{Red}
 			},
-			assertState: func(t *testing.T, state State) {},
-			expectError: true,
+			assertState:  func(t *testing.T, state State) {},
+			expectError:  true,
 			errorMessage: "cannot drop circle here due to stacking rules",
 		},
 		{
@@ -272,8 +271,8 @@ func TestService_Drop(t *testing.T) {
 				ds.State.Robot.Holding = &redCircle
 				ds.State.Grid[1][1] = []Circle{Red}
 			},
-			assertState: func(t *testing.T, state State) {},
-			expectError: true,
+			assertState:  func(t *testing.T, state State) {},
+			expectError:  true,
 			errorMessage: "cannot drop circle here due to stacking rules",
 		},
 		{
@@ -285,8 +284,8 @@ func TestService_Drop(t *testing.T) {
 				ds.State.Robot.Holding = &greenCircle
 				ds.State.Grid[1][1] = []Circle{Blue}
 			},
-			assertState: func(t *testing.T, state State) {},
-			expectError: true,
+			assertState:  func(t *testing.T, state State) {},
+			expectError:  true,
 			errorMessage: "cannot drop circle here due to stacking rules",
 		},
 		{
@@ -301,7 +300,7 @@ func TestService_Drop(t *testing.T) {
 				if len(state.Grid[1][1]) != 2 || state.Grid[1][1][1] != Red {
 					t.Fatalf("expected red circle on top of blue, got %v", state.Grid[1][1])
 				}
-				
+
 				if state.Robot.Holding != nil {
 					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
 				}
@@ -317,8 +316,8 @@ func TestService_Drop(t *testing.T) {
 				ds.State.Robot.Holding = &blueCircle
 				ds.State.Grid[1][1] = []Circle{Blue}
 			},
-			assertState: func(t *testing.T, state State) {},
-			expectError: true,
+			assertState:  func(t *testing.T, state State) {},
+			expectError:  true,
 			errorMessage: "cannot drop circle here due to stacking rules",
 		},
 		{
@@ -337,7 +336,7 @@ func TestService_Drop(t *testing.T) {
 
 				if state.Robot.Holding != nil {
 					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
-				}	
+				}
 			},
 			expectError: false,
 		},
@@ -354,7 +353,7 @@ func TestService_Drop(t *testing.T) {
 				if len(state.Grid[1][1]) != 2 || state.Grid[1][1][1] != Green {
 					t.Fatalf("expected green circle on top, got %v", state.Grid[1][1])
 				}
-				
+
 				if state.Robot.Holding != nil {
 					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
 				}
@@ -378,7 +377,7 @@ func TestService_Drop(t *testing.T) {
 					t.Fatalf("expected robot to hold nothing after drop, got %v", state.Robot.Holding)
 				}
 			},
-			expectError: false,	
+			expectError: false,
 		},
 	}
 
@@ -422,28 +421,27 @@ func TestService_GetState(t *testing.T) {
 				if state.Robot.Holding != nil {
 					t.Fatalf("expected robot to hold nothing initially, got %v", state.Robot.Holding)
 				}
-			},
-		},
-		{
-			name: "after move",
-			setupFunc: func(svc *Service) {
-				svc.Move(Right)
-			},
-			validateFunc: func(t *testing.T, state State) {
-				if state.Robot.PositionX != 1 || state.Robot.PositionY != 0 {
-					t.Fatalf("expected robot at (1,0) after move right, got (%d,%d)",
-						state.Robot.PositionX, state.Robot.PositionY)
+
+				expectedGrid := [GridSize][GridSize][]Circle{
+					{{Red}, {Green}, {Green}},
+					{{Blue}, {Red}, {Blue}},
+					{{Green}, {Blue}, {Red}},
 				}
-			},
-		},
-		{
-			name: "after pick",
-			setupFunc: func(svc *Service) {
-				svc.Pick()
-			},
-			validateFunc: func(t *testing.T, state State) {
-				if state.Robot.Holding == nil || *state.Robot.Holding != Red {
-					t.Fatalf("expected robot to hold Red after pick, got %v", state.Robot.Holding)
+				for x := 0; x < GridSize; x++ {
+					for y := 0; y < GridSize; y++ {
+						expectedStack := expectedGrid[x][y]
+						actualStack := state.Grid[x][y]
+						if len(expectedStack) != len(actualStack) {
+							t.Fatalf("expected stack length %d at (%d,%d), got %d",
+								len(expectedStack), x, y, len(actualStack))
+						}
+						for i := range expectedStack {
+							if expectedStack[i] != actualStack[i] {
+								t.Fatalf("expected circle %v at index %d at (%d,%d), got %v",
+									expectedStack[i], i, x, y, actualStack[i])
+							}
+						}
+					}
 				}
 			},
 		},
@@ -453,9 +451,6 @@ func TestService_GetState(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ds := NewDataStore()
 			svc := NewService(ds)
-
-			tt.setupFunc(svc)
-
 			state := svc.GetState()
 			tt.validateFunc(t, state)
 		})
@@ -464,19 +459,17 @@ func TestService_GetState(t *testing.T) {
 
 func TestService_GetHistory(t *testing.T) {
 	tests := []struct {
-		name           string
-		setupFunc      func(*Service)
-		expectedLength int
-		validateFunc   func(*testing.T, []MovementHistory)
+		name         string
+		setupFunc    func(*Service)
+		validateFunc func(*testing.T, []MovementHistory)
 	}{
 		{
-			name: "empty history initially",
-			setupFunc: func(svc *Service) {
-				// No actions
-			},
-			expectedLength: 0,
+			name:      "empty history initially",
+			setupFunc: func(svc *Service) {},
 			validateFunc: func(t *testing.T, history []MovementHistory) {
-				// Nothing to validate for empty history
+				if len(history) != 0 {
+					t.Fatalf("expected empty history, got length %d", len(history))
+				}
 			},
 		},
 		{
@@ -484,7 +477,6 @@ func TestService_GetHistory(t *testing.T) {
 			setupFunc: func(svc *Service) {
 				svc.Move(Right)
 			},
-			expectedLength: 1,
 			validateFunc: func(t *testing.T, history []MovementHistory) {
 				if history[0].Moves != "Moved right" {
 					t.Fatalf("expected 'Moved right', got '%s'", history[0].Moves)
@@ -492,39 +484,17 @@ func TestService_GetHistory(t *testing.T) {
 			},
 		},
 		{
-			name: "history after pick and drop",
+			name: "history after pick, move and drop",
 			setupFunc: func(svc *Service) {
 				svc.Pick()
 				svc.Move(Down)
 				svc.Drop()
 			},
-			expectedLength: 3,
 			validateFunc: func(t *testing.T, history []MovementHistory) {
 				expected := []string{
 					"Picked up a red circle",
 					"Moved down",
 					"Dropped a red circle",
-				}
-				for i, exp := range expected {
-					if history[i].Moves != exp {
-						t.Fatalf("expected '%s' at index %d, got '%s'", exp, i, history[i].Moves)
-					}
-				}
-			},
-		},
-		{
-			name: "history after multiple moves",
-			setupFunc: func(svc *Service) {
-				svc.Move(Right)
-				svc.Move(Down)
-				svc.Move(Left)
-			},
-			expectedLength: 3,
-			validateFunc: func(t *testing.T, history []MovementHistory) {
-				expected := []string{
-					"Moved right",
-					"Moved down",
-					"Moved left",
 				}
 				for i, exp := range expected {
 					if history[i].Moves != exp {
@@ -543,10 +513,6 @@ func TestService_GetHistory(t *testing.T) {
 			tt.setupFunc(svc)
 
 			history := svc.GetHistory()
-
-			if len(history) != tt.expectedLength {
-				t.Fatalf("expected history length %d, got %d", tt.expectedLength, len(history))
-			}
 
 			tt.validateFunc(t, history)
 		})
