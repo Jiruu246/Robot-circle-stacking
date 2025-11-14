@@ -111,6 +111,12 @@ body {
   color: #8a1f11;
   border: 1px solid #f5c6cb;
 }
+.message.show.success {
+  background: #d1edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  font-weight: bold;
+}
 
 .movement-controls button,
 .interaction-controls button,

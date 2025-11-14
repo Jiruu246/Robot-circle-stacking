@@ -27,6 +27,12 @@ function showErrorMessage(text) {
     }, 4000);
 }
 
+function showWinMessage() {
+    if (!MESSAGE) return;
+    MESSAGE.textContent = 'Task successfully completed!';
+    MESSAGE.className = `message show success`;
+}
+
 async function fetchInitialState() {
     const res = await fetch(END_POINTS.state);
     const data = await res.json();
@@ -91,6 +97,10 @@ async function render(state) {
             HOLDING.classList.add('empty');
             HOLDING.textContent = 'Empty';
         }
+    }
+
+    if (state.won) {
+        showWinMessage();
     }
 }
 

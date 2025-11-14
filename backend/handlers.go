@@ -23,6 +23,7 @@ func (h *Handler) GetState(c *gin.Context) {
 		PositionY: state.Robot.PositionY,
 		Holding:   state.Robot.Holding,
 		Grid:      state.Grid,
+		Won:       h.Service.HasWon(),
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -65,6 +66,7 @@ func (h *Handler) ProcessCommand(c *gin.Context) {
 		PositionY: state.Robot.PositionY,
 		Holding:   state.Robot.Holding,
 		Grid:      state.Grid,
+		Won:       h.Service.HasWon(),
 	}
 
 	c.JSON(http.StatusOK, resp)

@@ -20,6 +20,24 @@ func (s *Service) GetState() State {
 	return s.storage.State
 }
 
+func (s *Service) HasWon() bool {
+	s.storage.Mu.Lock()
+	defer s.storage.Mu.Unlock()
+
+	if s.storage.State.Robot.Holding != nil {
+		return false
+	}
+
+	for x := range GridSize - 1 {
+		for y := range GridSize {
+			if len(s.storage.State.Grid[x][y]) > 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (s *Service) GetHistory() []MovementHistory {
 	s.storage.Mu.Lock()
 	defer s.storage.Mu.Unlock()

@@ -10,4 +10,5 @@ type StateResponse struct {
 	PositionY int                          `json:"position_y"`
 	Holding   *Circle                      `json:"holding,omitempty"`
 	Grid      [GridSize][GridSize][]Circle `json:"grid"`
+	Won       bool                         `json:"won"`
 }
